@@ -1,59 +1,109 @@
 # LicenseStoreWeb
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4.
+Angular web application for managing Sico product licenses. Replaces the legacy WPF **SicoPassword** desktop application.
 
-## Development server
+## Overview
 
-To start a local development server, run:
+LicenseStoreWeb provides a browser-based interface for generating, viewing, and deleting license passwords for four Sico product lines:
+
+| Product | Type | Special Fields |
+|---------|------|----------------|
+| **Sico1010** | Standard | Password, Modem Password |
+| **Sico5000** | Standard + Premium | Password, Modem Password, Premium Password |
+| **Sico2020** | Network | Password, Premium Password, Server IP, Wireguard Address |
+| **Sico6000** | Network | Password, Premium Password, Server IP, Wireguard Address |
+
+## Features
+
+- **JWT Authentication** — Login against the SicoLicenseStore backend (`/api/auth/login`)
+- **4-Tab Dashboard** — One tab per product (Sico6000, Sico2020, Sico1010, Sico5000)
+- **License Table** — Sortable/paginated Material table, default sorted by date (newest first)
+- **Smart Filter** — Supports text search, single date (`dd.MM.yyyy`), date range (`01.01.2005 - 30.06.2025`), year (`2026`), and year range (`2020 - 2025`)
+- **Detail Panel** — Shows selected row details: Neuron ID, Version, Project Name, Description, IP/Wireguard (network products), Password, Premium Password, Modem Password
+- **Password Generation** — Create dialog with pre-fill from selected row; Wireguard/IP fields for Sico2020/6000
+- **License Deletion** — Delete with confirmation dialog
+- **Response Display** — Generated passwords shown in the detail panel (with IP/Wireguard parsing for network products)
+
+## Architecture
+
+```
+src/
+├── app/
+│   ├── components/
+│   │   ├── login/                  # JWT login form
+│   │   ├── license-dashboard/      # Tab container (4 tabs)
+│   │   ├── license-table/          # Reusable table per product
+│   │   ├── create-license-dialog/  # Password generation dialog
+│   │   └── confirm-dialog/         # Delete confirmation
+│   ├── services/
+│   │   ├── auth.service.ts         # JWT auth, token storage
+│   │   └── license.service.ts      # API calls (CRUD per product)
+│   ├── guards/
+│   │   └── auth.guard.ts           # Route protection
+│   ├── interceptors/
+│   │   └── auth.interceptor.ts     # Bearer token injection
+│   └── models/
+│       └── sico-anlage.model.ts    # TypeScript interfaces
+└── environments/
+    ├── environment.ts              # Dev (localhost)
+    └── environment.prod.ts         # Production
+```
+
+## Backend
+
+Communicates with **SicoLicenseStore** via REST API:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/login` | POST | Authenticate, receive JWT token |
+| `/api/licenses/sico1010` | GET | Get all Sico1010 licenses |
+| `/api/licenses/sico2020` | GET | Get all Sico2020 licenses |
+| `/api/licenses/sico5000` | GET | Get all Sico5000 licenses |
+| `/api/licenses/sico6000` | GET | Get all Sico6000 licenses |
+| `/api/licenses/{product}` | POST | Generate password |
+| `/api/licenses/{product}` | DELETE | Delete license |
+
+Default backend URL: `https://sicotronictest.de:9443`
+
+## Tech Stack
+
+- **Angular 21** with standalone components
+- **Angular Material** (azure-blue theme)
+- **TypeScript** with signals-based reactivity
+- **nginx** for production serving (Docker)
+
+## Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Start dev server
 ng serve
+# → http://localhost:4200/
+
+# Build for production
+ng build --configuration=production
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Deployment (Railway)
 
-## Code scaffolding
+The app is configured for deployment on [Railway](https://railway.app) via Docker:
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- **Dockerfile** — Multi-stage build: Node 22 (build) → nginx:alpine (serve)
+- **railway.json** / **railway.toml** — Railway deployment configuration
+- **nginx.conf** — SPA routing, gzip, asset caching, `/health` endpoint
 
-```bash
-ng generate component component-name
-```
+Railway auto-deploys on push to `main` branch.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Railway Setup
 
-```bash
-ng generate --help
-```
+1. Create new project in Railway → "Deploy from GitHub repo"
+2. Select `tangueroR/LicenseStoreWeb`
+3. Railway detects the Dockerfile automatically
+4. Go to **Settings → Networking → Generate Domain** to expose publicly
 
-## Building
+## Repository
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **GitHub**: [tangueroR/LicenseStoreWeb](https://github.com/tangueroR/LicenseStoreWeb)
+- **Origin**: Replaces the WPF `SicoPassword` application (PasswortList.xaml)
