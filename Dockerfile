@@ -24,5 +24,5 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Railway uses PORT env variable
 EXPOSE 8080
 
-# Use envsubst to inject PORT at runtime (Railway provides $PORT)
-CMD ["sh", "-c", "envsubst '${PORT}' < /etc/nginx/conf.d/default.conf > /tmp/default.conf && mv /tmp/default.conf /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Use sed to inject PORT at runtime (Railway provides $PORT, default 8080)
+CMD ["sh", "-c", "sed -i \"s/__PORT__/${PORT:-8080}/g\" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
