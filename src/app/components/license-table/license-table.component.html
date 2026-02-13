@@ -70,6 +70,14 @@
               <h3>Ausgewählte Anlage</h3>
               <div class="detail-fields">
                 <div class="detail-field">
+                  <span class="detail-label">Neuron ID:</span>
+                  <span class="detail-value monospace">{{ row.neuronId }}</span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Version:</span>
+                  <span class="detail-value">{{ row.password5 }}</span>
+                </div>
+                <div class="detail-field">
                   <span class="detail-label">Projektname:</span>
                   <span class="detail-value">{{ row.projectName }}</span>
                 </div>
@@ -77,40 +85,40 @@
                   <span class="detail-label">Beschreibung:</span>
                   <span class="detail-value">{{ row.description }}</span>
                 </div>
-                <div class="detail-field">
-                  <span class="detail-label">Datum:</span>
-                  <span class="detail-value">{{ row.releaseDate | date:'dd.MM.yyyy' }}</span>
-                </div>
-                <div class="detail-field">
-                  <span class="detail-label">Neuron ID:</span>
-                  <span class="detail-value monospace">{{ row.neuronId }}</span>
-                </div>
-                <div class="detail-field">
-                  <span class="detail-label">Passwort:</span>
-                  <span class="detail-value monospace">{{ row.password }}</span>
-                </div>
-                @if (!isNetworkProduct) {
-                  <div class="detail-field">
-                    <span class="detail-label">Modem Passwort:</span>
-                    <span class="detail-value monospace">{{ row.modemPassword }}</span>
-                  </div>
-                }
                 @if (isNetworkProduct) {
                   <div class="detail-field">
                     <span class="detail-label">Server IP Adresse:</span>
                     <span class="detail-value monospace">{{ getRowIpAddress(row) }}</span>
                   </div>
-                  <div class="detail-field">
-                    <span class="detail-label">Wireguard Adresse:</span>
-                    <span class="detail-value monospace">{{ getRowWireguardAddress(row) }}</span>
-                  </div>
                 }
+                <div class="detail-field">
+                  <span class="detail-label">Passwort:</span>
+                  <span class="detail-value monospace">{{ row.password }}</span>
+                </div>
                 @if (showsPremium) {
                   <div class="detail-field">
                     <span class="detail-label">Premium Passwort:</span>
                     <span class="detail-value monospace">{{ getPremiumPassword(row) }}</span>
                   </div>
                 }
+                @if (!isNetworkProduct) {
+                  @if (row.modemPassword) {
+                    <div class="detail-field">
+                      <span class="detail-label">Modem Passwort:</span>
+                      <span class="detail-value monospace">{{ row.modemPassword }}</span>
+                    </div>
+                  }
+                }
+                @if (isNetworkProduct) {
+                  <div class="detail-field">
+                    <span class="detail-label">Wireguard Adresse:</span>
+                    <span class="detail-value monospace">{{ getRowWireguardAddress(row) }}</span>
+                  </div>
+                }
+                <div class="detail-field">
+                  <span class="detail-label">Datum:</span>
+                  <span class="detail-value">{{ row.releaseDate | date:'dd.MM.yyyy' }}</span>
+                </div>
                 <div class="detail-field">
                   <span class="detail-label">Benutzer:</span>
                   <span class="detail-value">{{ row.userName }}</span>
