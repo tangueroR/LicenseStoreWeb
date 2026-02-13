@@ -1,0 +1,297 @@
+<div class="table-container">
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Filter (Text, Datum, Jahr oder Zeitraum)</mat-label>
+      <input matInput [(ngModel)]="filterValue" (keyup)="applyFilter()"
+             placeholder="z.B. Projekt, 2026, 01.01.2005 - 30.06.2025" />
+      <mat-icon matPrefix>search</mat-icon>
+      @if (filterValue) {
+        <button mat-icon-button matSuffix (click)="clearFilter()">
+          <mat-icon>clear</mat-icon>
+        </button>
+      }
+      <mat-hint>Text, dd.MM.yyyy, yyyy, oder dd.MM.yyyy - dd.MM.yyyy</mat-hint>
+    </mat-form-field>
+
+    <!-- Date range quick inputs -->
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>Von</mat-label>
+      <input matInput [(ngModel)]="dateFrom" (change)="applyDateRange()" placeholder="dd.MM.yyyy" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="date-field">
+      <mat-label>Bis</mat-label>
+      <input matInput [(ngModel)]="dateTo" (change)="applyDateRange()" placeholder="dd.MM.yyyy" />
+    </mat-form-field>
+
+    <span class="toolbar-spacer"></span>
+
+    <button mat-raised-button (click)="loadData()" matTooltip="Daten aktualisieren">
+      <mat-icon>refresh</mat-icon>
+      Aktualisieren
+    </button>
+
+    @if (authService.canManageLicenses()) {
+      <button mat-raised-button color="primary" (click)="onCreateLicense()" matTooltip="Passwort generieren">
+        <mat-icon>vpn_key</mat-icon>
+        Passwort generieren
+      </button>
+
+      @if (selectedRow(); as sel) {
+        <button mat-raised-button color="warn" (click)="onDeleteLicense(sel)"
+                matTooltip="Selektierte Lizenz löschen">
+          <mat-icon>delete</mat-icon>
+          Löschen
+        </button>
+      }
+    }
+  </div>
+
+  <!-- Active filter info -->
+  @if (activeFilterInfo()) {
+    <div class="filter-info">
+      <mat-icon>filter_list</mat-icon>
+      <span>{{ activeFilterInfo() }}</span>
+      <span class="filter-count">{{ dataSource.filteredData.length }} Ergebnis(se)</span>
+      <button mat-icon-button (click)="clearFilter()" matTooltip="Filter zurücksetzen">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+
+  <!-- Detail Panel: shows selected row info + last generation response -->
+  @if (selectedRow() || lastLicenseResponse()) {
+    <mat-card class="detail-panel">
+      <mat-card-content>
+        <div class="detail-grid">
+          <!-- Selected row details -->
+          @if (selectedRow(); as row) {
+            <div class="detail-section">
+              <h3>Ausgewählte Anlage</h3>
+              <div class="detail-fields">
+                <div class="detail-field">
+                  <span class="detail-label">Projektname:</span>
+                  <span class="detail-value">{{ row.projectName }}</span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Beschreibung:</span>
+                  <span class="detail-value">{{ row.description }}</span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Datum:</span>
+                  <span class="detail-value">{{ row.releaseDate | date:'dd.MM.yyyy' }}</span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Neuron ID:</span>
+                  <span class="detail-value monospace">{{ row.neuronId }}</span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Passwort:</span>
+                  <span class="detail-value monospace">{{ row.password }}</span>
+                </div>
+                @if (!isNetworkProduct) {
+                  <div class="detail-field">
+                    <span class="detail-label">Modem Passwort:</span>
+                    <span class="detail-value monospace">{{ row.modemPassword }}</span>
+                  </div>
+                }
+                @if (isNetworkProduct) {
+                  <div class="detail-field">
+                    <span class="detail-label">Server IP Adresse:</span>
+                    <span class="detail-value monospace">{{ getRowIpAddress(row) }}</span>
+                  </div>
+                  <div class="detail-field">
+                    <span class="detail-label">Wireguard Adresse:</span>
+                    <span class="detail-value monospace">{{ getRowWireguardAddress(row) }}</span>
+                  </div>
+                }
+                @if (showsPremium) {
+                  <div class="detail-field">
+                    <span class="detail-label">Premium Passwort:</span>
+                    <span class="detail-value monospace">{{ getPremiumPassword(row) }}</span>
+                  </div>
+                }
+                <div class="detail-field">
+                  <span class="detail-label">Benutzer:</span>
+                  <span class="detail-value">{{ row.userName }}</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Last license generation response -->
+          @if (lastLicenseResponse(); as resp) {
+            <div class="detail-section response-section">
+              <h3>Generierte Passwörter</h3>
+              <div class="detail-fields">
+                <div class="detail-field">
+                  <span class="detail-label">Passwort:</span>
+                  <span class="detail-value monospace highlight">{{ resp.password }}</span>
+                </div>
+                @if (isNetworkProduct) {
+                  @if (getResponseIpAddress(resp)) {
+                    <div class="detail-field">
+                      <span class="detail-label">Server IP Adresse:</span>
+                      <span class="detail-value monospace highlight">{{ getResponseIpAddress(resp) }}</span>
+                    </div>
+                  }
+                  @if (getResponseWireguardAddress(resp)) {
+                    <div class="detail-field">
+                      <span class="detail-label">Wireguard Adresse:</span>
+                      <span class="detail-value monospace highlight">{{ getResponseWireguardAddress(resp) }}</span>
+                    </div>
+                  }
+                } @else {
+                  @if (resp.modemPassword) {
+                    <div class="detail-field">
+                      <span class="detail-label">Modem Passwort:</span>
+                      <span class="detail-value monospace highlight">{{ resp.modemPassword }}</span>
+                    </div>
+                  }
+                }
+                @if (resp.premiumPassword) {
+                  <div class="detail-field">
+                    <span class="detail-label">Premium Passwort:</span>
+                    <span class="detail-value monospace highlight">{{ resp.premiumPassword }}</span>
+                  </div>
+                }
+                @if (resp.premiumModemPassword) {
+                  <div class="detail-field">
+                    <span class="detail-label">Premium Modem Passwort:</span>
+                    <span class="detail-value monospace highlight">{{ resp.premiumModemPassword }}</span>
+                  </div>
+                }
+                <div class="detail-field">
+                  <span class="detail-label">Server:</span>
+                  <span class="detail-value">{{ resp.serverName }}</span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">Info:</span>
+                  <span class="detail-value">{{ resp.info }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="detail-actions">
+          @if (authService.canManageLicenses() && selectedRow()) {
+            <button mat-mini-fab color="warn" (click)="onDeleteLicense(selectedRow()!)"
+                    matTooltip="Selektierte Lizenz löschen">
+              <mat-icon>delete</mat-icon>
+            </button>
+          }
+          <button mat-icon-button (click)="selectedRow.set(null); lastLicenseResponse.set(null)"
+                  matTooltip="Detailansicht schließen">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Loading bar -->
+  @if (isLoading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <!-- Table -->
+  <div class="mat-elevation-z2 table-wrapper">
+    <table mat-table [dataSource]="dataSource" matSort class="license-table">
+
+      <!-- Project Name -->
+      <ng-container matColumnDef="projectName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Projektname</th>
+        <td mat-cell *matCellDef="let row">{{ row.projectName }}</td>
+      </ng-container>
+
+      <!-- Description -->
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Beschreibung</th>
+        <td mat-cell *matCellDef="let row">{{ row.description }}</td>
+      </ng-container>
+
+      <!-- Release Date -->
+      <ng-container matColumnDef="releaseDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Datum</th>
+        <td mat-cell *matCellDef="let row">{{ row.releaseDate | date:'dd.MM.yyyy' }}</td>
+      </ng-container>
+
+      <!-- Neuron ID -->
+      <ng-container matColumnDef="neuronId">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Neuron ID</th>
+        <td mat-cell *matCellDef="let row" class="monospace">{{ row.neuronId }}</td>
+      </ng-container>
+
+      <!-- Password -->
+      <ng-container matColumnDef="password">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Passwort</th>
+        <td mat-cell *matCellDef="let row" class="monospace">{{ row.password }}</td>
+      </ng-container>
+
+      <!-- Modem Password (Sico1010/5000 only) -->
+      <ng-container matColumnDef="modemPassword">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Modem Passwort</th>
+        <td mat-cell *matCellDef="let row" class="monospace">{{ row.modemPassword }}</td>
+      </ng-container>
+
+      <!-- IP Address (Sico2020/6000 only - mapped from modemPassword) -->
+      <ng-container matColumnDef="ipAddress">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Server IP Adresse</th>
+        <td mat-cell *matCellDef="let row" class="monospace">{{ row.modemPassword }}</td>
+      </ng-container>
+
+      <!-- Wireguard Address (Sico2020/6000 only - mapped from password3) -->
+      <ng-container matColumnDef="wireguardAddress">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Wireguard Adresse</th>
+        <td mat-cell *matCellDef="let row" class="monospace">{{ row.password3 }}</td>
+      </ng-container>
+
+      <!-- Premium Password (Sico5000/2020/6000 - stored in password4) -->
+      <ng-container matColumnDef="premiumPassword">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Premium Passwort</th>
+        <td mat-cell *matCellDef="let row" class="monospace">{{ getPremiumPassword(row) }}</td>
+      </ng-container>
+
+      <!-- User Name -->
+      <ng-container matColumnDef="userName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Benutzer</th>
+        <td mat-cell *matCellDef="let row">{{ row.userName }}</td>
+      </ng-container>
+
+      <!-- Actions -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+        <td mat-cell *matCellDef="let row">
+          @if (authService.canManageLicenses()) {
+            <button mat-icon-button color="warn"
+                    (click)="onDeleteLicense(row); $event.stopPropagation()"
+                    matTooltip="Lizenz löschen">
+              <mat-icon>delete</mat-icon>
+            </button>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          [class.selected-row]="selectedRow() === row"
+          (click)="onRowSelect(row)"></tr>
+
+      <!-- No data row -->
+      <tr class="mat-row no-data-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          @if (filterValue) {
+            Keine Einträge gefunden für "{{ filterValue }}".
+          } @else {
+            Keine Lizenzen vorhanden.
+          }
+        </td>
+      </tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[25, 50, 100]"
+                   showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

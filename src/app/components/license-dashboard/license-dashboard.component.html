@@ -1,0 +1,37 @@
+<mat-toolbar color="primary" class="app-toolbar">
+  <span>SicoLicenseStore</span>
+  <span class="spacer"></span>
+  <span class="user-info">{{ authService.userName() }}</span>
+  <button mat-icon-button [matMenuTriggerFor]="userMenu">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+  <mat-menu #userMenu="matMenu">
+    <button mat-menu-item disabled>
+      <mat-icon>person</mat-icon>
+      <span>{{ authService.userName() }}</span>
+    </button>
+    @if (authService.isAdmin()) {
+      <button mat-menu-item disabled>
+        <mat-icon>admin_panel_settings</mat-icon>
+        <span>Administrator</span>
+      </button>
+    }
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="onLogout()">
+      <mat-icon>logout</mat-icon>
+      <span>Abmelden</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
+
+<div class="dashboard-content">
+  <mat-tab-group [(selectedIndex)]="selectedIndex" animationDuration="200ms">
+    @for (tab of tabs; track tab.product) {
+      <mat-tab [label]="tab.label">
+        <ng-template matTabContent>
+          <app-license-table [product]="tab.product"></app-license-table>
+        </ng-template>
+      </mat-tab>
+    }
+  </mat-tab-group>
+</div>

@@ -1,0 +1,25 @@
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.user-info {
+  font-size: 14px;
+  margin-right: 8px;
+  opacity: 0.9;
+}
+
+.dashboard-content {
+  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+mat-divider {
+  margin: 4px 0;
+}

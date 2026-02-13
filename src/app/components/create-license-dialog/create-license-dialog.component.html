@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>Passwort generieren — {{ productLabel }}</h2>
+
+<mat-dialog-content>
+  <form class="dialog-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Neuron ID</mat-label>
+      <input matInput [(ngModel)]="neuronId" name="neuronId" maxlength="12" required />
+      <mat-hint>12 Zeichen (hex)</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Projektname</mat-label>
+      <input matInput [(ngModel)]="projectName" name="projectName" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Beschreibung</mat-label>
+      <input matInput [(ngModel)]="description" name="description" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Version</mat-label>
+      <input matInput [(ngModel)]="version" name="version" />
+    </mat-form-field>
+
+    @if (isNetworkProduct) {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Server IP Adresse</mat-label>
+        <input matInput [(ngModel)]="ipAddress" name="ipAddress" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Wireguard Adresse</mat-label>
+        <input matInput [(ngModel)]="wireguardAddress" name="wireguardAddress" />
+      </mat-form-field>
+    }
+
+    <div class="checkbox-row">
+      <mat-checkbox [(ngModel)]="isPremium" name="isPremium">Premium</mat-checkbox>
+      <mat-checkbox [(ngModel)]="hasLicence" name="hasLicence">Hat Lizenz</mat-checkbox>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="onCreate()" [disabled]="!isValid">
+    Passwort generieren
+  </button>
+</mat-dialog-actions>

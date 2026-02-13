@@ -1,0 +1,15 @@
+{
+  "$schema": "https://railway.app/schema.json",
+  "build": {
+    "builder": "dockerfile"
+  },
+  "deploy": {
+    "restartPolicyMaxRetries": 5,
+    "restartPolicyWindowMs": 60000
+  },
+  "variables": {
+    "PORT": {
+      "value": "8080"
+    }
+  }
+}

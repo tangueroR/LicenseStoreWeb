@@ -1,0 +1,38 @@
+# Version control
+.git
+.gitignore
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+.angular/
+
+# Node (already in container from npm ci)
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI/editor configs
+.claude/
+.cursor/
+.gemini/
+.github/
+.junie/
+.windsurf/
+AGENTS.md
