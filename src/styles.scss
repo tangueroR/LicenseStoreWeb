@@ -41,3 +41,8 @@ body {
 .mat-mdc-dialog-container .mdc-dialog__surface {
   background-color: #ffffff !important;
 }
+
+// Ensure menu panel has white background on all browsers
+.mat-mdc-menu-panel {
+  background-color: #ffffff !important;
+}
