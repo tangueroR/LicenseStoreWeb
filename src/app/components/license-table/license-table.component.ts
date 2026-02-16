@@ -69,19 +69,19 @@ export class LicenseTableComponent implements OnInit {
   /** Columns shown for Sico1010 */
   private readonly sico1010Columns = [
     'projectName', 'description', 'releaseDate', 'neuronId',
-    'password', 'modemPassword', 'userName', 'actions'
+    'password', 'modemPassword', 'userName'
   ];
 
   /** Columns shown for Sico5000 (with premium password) */
   private readonly sico5000Columns = [
     'projectName', 'description', 'releaseDate', 'neuronId',
-    'password', 'modemPassword', 'premiumPassword', 'userName', 'actions'
+    'password', 'modemPassword', 'premiumPassword', 'userName'
   ];
 
   /** Columns shown for Sico2020 / Sico6000 (IP/Wireguard + premium) */
   private readonly networkColumns = [
     'projectName', 'description', 'releaseDate', 'neuronId',
-    'password', 'ipAddress', 'wireguardAddress', 'premiumPassword', 'userName', 'actions'
+    'password', 'ipAddress', 'wireguardAddress', 'premiumPassword', 'userName'
   ];
 
   get displayedColumns(): string[] {
