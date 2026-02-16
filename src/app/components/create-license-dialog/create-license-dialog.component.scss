@@ -1,8 +1,15 @@
+:host {
+  display: block;
+  background-color: #ffffff;
+  border-radius: 4px;
+}
+
 .dialog-form {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 400px;
+  padding-top: 20px;
 }
 
 .full-width {
