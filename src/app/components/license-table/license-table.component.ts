@@ -21,6 +21,7 @@ import { LicenseService } from '../../services/license.service';
 import { AuthService } from '../../services/auth.service';
 import { CreateLicenseDialogComponent, CreateLicenseDialogData } from '../create-license-dialog/create-license-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog/confirm-dialog.component';
+import { formatGermanDate, monthsBefore, parseGermanDate } from '../../shared/german-date';
 
 /** Number of calendar years offered as single-year presets in the range menu */
 const RECENT_YEAR_COUNT = 4;
@@ -138,23 +139,6 @@ export class LicenseTableComponent implements OnInit {
   }
 
   /**
-   * Parse a German date string (dd.MM.yyyy) into a Date object.
-   * Returns null if the format is invalid.
-   */
-  private parseGermanDate(dateStr: string): Date | null {
-    const match = dateStr.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-    if (!match) return null;
-    const day = parseInt(match[1], 10);
-    const month = parseInt(match[2], 10) - 1;
-    const year = parseInt(match[3], 10);
-    const d = new Date(year, month, day);
-    if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
-      return d;
-    }
-    return null;
-  }
-
-  /**
    * Get the releaseDate of an SicoAnlage as a Date object.
    */
   private getRowDate(data: SicoAnlage): Date | null {
@@ -178,8 +162,8 @@ export class LicenseTableComponent implements OnInit {
     // Try date range: "dd.MM.yyyy - dd.MM.yyyy"
     const rangeMatch = search.match(/^(\d{1,2}\.\d{1,2}\.\d{4})\s*-\s*(\d{1,2}\.\d{1,2}\.\d{4})$/);
     if (rangeMatch) {
-      const from = this.parseGermanDate(rangeMatch[1]);
-      const to = this.parseGermanDate(rangeMatch[2]);
+      const from = parseGermanDate(rangeMatch[1]);
+      const to = parseGermanDate(rangeMatch[2]);
       if (from && to) {
         to.setHours(23, 59, 59, 999);
         const rowDate = this.getRowDate(data);
@@ -189,7 +173,7 @@ export class LicenseTableComponent implements OnInit {
     }
 
     // Try single German date: "dd.MM.yyyy"
-    const singleDate = this.parseGermanDate(search);
+    const singleDate = parseGermanDate(search);
     if (singleDate) {
       const rowDate = this.getRowDate(data);
       if (!rowDate) return false;
@@ -242,7 +226,7 @@ export class LicenseTableComponent implements OnInit {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return this.toGermanDate(d);
+    return formatGermanDate(d);
   }
 
   loadData(): void {
@@ -337,7 +321,7 @@ export class LicenseTableComponent implements OnInit {
    */
   applyLastMonths(months: number): void {
     const today = new Date();
-    this.setDateRange(this.monthsBefore(today, months), today);
+    this.setDateRange(monthsBefore(today, months), today);
   }
 
   /** Fill "Von"/"Bis" with a range that ends today and spans the given number of years */
@@ -358,27 +342,9 @@ export class LicenseTableComponent implements OnInit {
 
   /** Write a range into the "Von"/"Bis" inputs and apply it as filter */
   private setDateRange(from: Date, to: Date): void {
-    this.dateFrom = this.toGermanDate(from);
-    this.dateTo = this.toGermanDate(to);
+    this.dateFrom = formatGermanDate(from);
+    this.dateTo = formatGermanDate(to);
     this.applyDateRange();
-  }
-
-  /**
-   * Same day of month, `months` months earlier. Clamped to the last day of the
-   * target month so 31.03. minus one month becomes 28./29.02. instead of 02./03.03.
-   */
-  private monthsBefore(date: Date, months: number): Date {
-    const target = new Date(date.getFullYear(), date.getMonth() - months, 1);
-    const lastDayOfTargetMonth = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
-    target.setDate(Math.min(date.getDate(), lastDayOfTargetMonth));
-    return target;
-  }
-
-  /** Format a Date as dd.MM.yyyy */
-  private toGermanDate(date: Date): string {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    return `${day}.${month}.${date.getFullYear()}`;
   }
 
   onRowSelect(row: SicoAnlage): void {

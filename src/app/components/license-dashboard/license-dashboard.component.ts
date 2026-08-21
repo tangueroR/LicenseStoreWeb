@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../services/auth.service';
 import { LicenseTableComponent } from '../license-table/license-table.component';
+import { LicenseStatisticsComponent } from '../statistics/license-statistics.component';
 import { ProductType } from '../../models/sico-anlage.model';
 import { environment } from '../../../environments/environment';
 
@@ -25,7 +26,8 @@ interface ProductTab {
     MatIconModule,
     MatMenuModule,
     MatDividerModule,
-    LicenseTableComponent
+    LicenseTableComponent,
+    LicenseStatisticsComponent
   ],
   templateUrl: './license-dashboard.component.html',
   styleUrl: './license-dashboard.component.scss'

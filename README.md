@@ -16,10 +16,13 @@ LicenseStoreWeb provides a browser-based interface for generating, viewing, and 
 ## Features
 
 - **JWT Authentication** — Login against the SicoLicenseStore backend (`/api/auth/login`)
-- **4-Tab Dashboard** — One tab per product (Sico6000, Sico2020, Sico1010, Sico5000)
+- **Dashboard** — One tab per product (Sico6000, Sico2020, Sico1010, Sico5000) plus a **Statistik** tab
 - **License Table** — Sortable/paginated Material table, default sorted by date (newest first)
 - **Smart Filter** — Supports text search, single date (`dd.MM.yyyy`), date range (`01.01.2005 - 30.06.2025`), year (`2026`), and year range (`2020 - 2025`)
 - **Range Presets** — "Zeitraum" button fills the Von/Bis fields with a ready-made range (last 12 months, last 2/3/4 years, year to date, one of the last four calendar years) and applies it; the filled dates stay editable
+- **Statistics** — Licenses per period and product as a grouped bar chart plus a data table; range presets (last 12 months, last 2/3/5 years, year to date, last 5 calendar years, everything since 2012, single years), grouped by calendar year or by rolling 12-month windows. Built from plain HTML/CSS — no charting library
+- **Growth in percent** — The first period of the range is the base (100 %); every later period is shown relative to it, plus the change against the preceding period
+- **Licence amounts (€)** — Manual input per period (monthly or yearly, switchable), stored in the browser only and visible to a single user. Kept out of the bar chart on purpose: euros and installation counts share no scale, so both series are indexed to their base period and compared in percentage points
 - **Version Display** — 4-part version (`environment.version`) shown next to the app title in the toolbar
 - **Detail Panel** — Shows selected row details: Neuron ID, Version, Project Name, Description, IP/Wireguard (network products), Password, Premium Password, Modem Password
 - **Password Generation** — Create dialog with pre-fill from selected row; Wireguard/IP fields for Sico2020/6000
@@ -33,8 +36,9 @@ src/
 ├── app/
 │   ├── components/
 │   │   ├── login/                  # JWT login form
-│   │   ├── license-dashboard/      # Tab container (4 tabs)
+│   │   ├── license-dashboard/      # Tab container (4 product tabs + Statistik)
 │   │   ├── license-table/          # Reusable table per product
+│   │   ├── statistics/             # Statistik tab + grouped bar chart
 │   │   ├── create-license-dialog/  # Password generation dialog
 │   │   └── confirm-dialog/         # Delete confirmation
 │   ├── services/
@@ -44,8 +48,11 @@ src/
 │   │   └── auth.guard.ts           # Route protection
 │   ├── interceptors/
 │   │   └── auth.interceptor.ts     # Bearer token injection
+│   ├── shared/
+│   │   └── german-date.ts          # dd.MM.yyyy parsing/formatting, month arithmetic
 │   └── models/
-│       └── sico-anlage.model.ts    # TypeScript interfaces
+│       ├── sico-anlage.model.ts    # TypeScript interfaces
+│       └── product-info.model.ts   # Product lifecycle + chart color slot
 └── environments/
     ├── environment.ts              # Dev (localhost)
     └── environment.prod.ts         # Production

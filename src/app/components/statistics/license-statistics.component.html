@@ -1,0 +1,369 @@
+<div class="statistics-container">
+  @if (isLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Statistikdaten werden geladen"></mat-progress-bar>
+  }
+
+  <!-- Range controls: presets fill Von/Bis, the fields stay editable -->
+  <div class="statistics-toolbar">
+    <mat-form-field appearance="outline" class="date-field" subscriptSizing="dynamic">
+      <mat-label>Von</mat-label>
+      <input
+        matInput
+        [formControl]="dateFromControl"
+        placeholder="TT.MM.JJJJ"
+        (keyup.enter)="applyRange()"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="date-field" subscriptSizing="dynamic">
+      <mat-label>Bis</mat-label>
+      <input
+        matInput
+        [formControl]="dateToControl"
+        placeholder="TT.MM.JJJJ"
+        (keyup.enter)="applyRange()"
+      />
+    </mat-form-field>
+
+    <button mat-flat-button (click)="applyRange()">
+      <mat-icon>search</mat-icon>
+      Anzeigen
+    </button>
+
+    <button
+      mat-stroked-button
+      [matMenuTriggerFor]="rangeMenu"
+      matTooltip="Zeitraum in Von/Bis eintragen und auswerten"
+    >
+      <mat-icon>date_range</mat-icon>
+      Zeitraum
+    </button>
+    <mat-menu #rangeMenu="matMenu">
+      <button mat-menu-item (click)="applyLastMonths(12)">Letzte 12 Monate</button>
+      <button mat-menu-item (click)="applyLastYears(2)">Letzte 2 Jahre (ab heute)</button>
+      <button mat-menu-item (click)="applyLastYears(3)">Letzte 3 Jahre (ab heute)</button>
+      <button mat-menu-item (click)="applyLastYears(5)">Letzte 5 Jahre (ab heute)</button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="applyYearToDate()">Seit Jahresbeginn</button>
+      <button mat-menu-item (click)="applyLastCalendarYears(5)">Letzte 5 Kalenderjahre</button>
+      <button mat-menu-item (click)="applyFullHistory()">Alles seit {{ earliestYear }}</button>
+      <mat-divider></mat-divider>
+      @for (year of recentYears; track year) {
+        <button mat-menu-item (click)="applyCalendarYear(year)">Jahr {{ year }}</button>
+      }
+    </mat-menu>
+
+    <mat-button-toggle-group
+      [value]="grouping()"
+      (change)="grouping.set($event.value)"
+      aria-label="Gruppierung der Balken"
+      hideSingleSelectionIndicator
+    >
+      <mat-button-toggle value="calendar" matTooltip="Ein Balkenblock je Kalenderjahr">
+        Kalenderjahr
+      </mat-button-toggle>
+      <mat-button-toggle value="rolling" matTooltip="12-Monats-Fenster, vom Bis-Datum rückwärts">
+        12-Monats-Fenster
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <span class="toolbar-spacer"></span>
+
+    <button mat-icon-button (click)="loadData()" matTooltip="Daten neu laden" aria-label="Daten neu laden">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <div class="range-info">
+    <mat-icon>info</mat-icon>
+    <span>Zeitraum: {{ rangeLabel() }}</span>
+    @if (undatedCount() > 0) {
+      <span class="range-warning">
+        {{ undatedCount() }} Anlagen ohne gültiges Datum sind nicht enthalten
+      </span>
+    }
+  </div>
+
+  @if (loadFailed()) {
+    <mat-card class="load-error">
+      <mat-card-content>
+        Die Statistikdaten konnten nicht geladen werden. Bitte über „Daten neu laden" erneut versuchen.
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Headline number plus one tile per product -->
+  <div class="summary-row">
+    <mat-card class="summary-card hero-card">
+      <mat-card-content>
+        <span class="summary-label">Anlagen im Zeitraum</span>
+        <span class="hero-value">{{ totalInRange() }}</span>
+        @if (hasGrowth()) {
+          <span class="delta" [matTooltip]="changeTooltip()" [class.delta-up]="totalChange().direction === 'up'" [class.delta-down]="totalChange().direction === 'down'">
+            {{ totalChange().text }} ggü. {{ baseLabel() }}
+          </span>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    @for (summary of productSummaries(); track summary.label) {
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <span class="summary-label">
+            <span class="swatch" [style.background]="summary.color" aria-hidden="true"></span>
+            {{ summary.label }}
+          </span>
+          <span class="summary-value">{{ summary.count }}</span>
+          @if (hasGrowth()) {
+            <span class="delta" [matTooltip]="changeTooltip()" [class.delta-up]="summary.change.direction === 'up'" [class.delta-down]="summary.change.direction === 'down'">
+              {{ summary.change.text }} ggü. {{ baseLabel() }}
+            </span>
+          }
+          <span class="summary-note">{{ summary.note }}</span>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <mat-card class="chart-card">
+    <mat-card-content>
+      <h2 class="chart-title">Anlagen pro Zeitraum</h2>
+      <p class="chart-subtitle">{{ rangeLabel() }}</p>
+
+      <ul class="legend">
+        @for (item of series; track item.key) {
+          <li>
+            <span class="swatch" [style.background]="item.color" aria-hidden="true"></span>
+            {{ item.label }}
+          </li>
+        }
+      </ul>
+
+      <app-grouped-bar-chart
+        [series]="series"
+        [groups]="chartGroups()"
+        caption="Anlagen pro Zeitraum je Produkt"
+      ></app-grouped-bar-chart>
+
+      <table class="stat-table">
+        <caption>
+          Anlagen je Produkt und Zeitraum — „–" bedeutet, dass das Produkt in diesem Jahr nicht
+          verkauft wurde.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Zeitraum</th>
+            @for (item of series; track item.key) {
+              <th scope="col" class="numeric">{{ item.label }}</th>
+            }
+            <th scope="col" class="numeric">Summe</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of tableRows(); track row.label) {
+            <tr>
+              <th scope="row">
+                {{ row.label }}
+                @if (row.hint) {
+                  <span class="row-hint">{{ row.hint }}</span>
+                }
+              </th>
+              @for (cell of row.cells; track cell.product) {
+                <td class="numeric">{{ cell.text }}</td>
+              }
+              <td class="numeric total">{{ row.total }}</td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td [attr.colspan]="series.length + 2" class="empty-row">
+                Keine Daten im gewählten Zeitraum.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+  @if (hasGrowth()) {
+    <!-- Everything measured against the first band of the range -->
+    <mat-card class="growth-card">
+      <mat-card-content>
+        <h2 class="chart-title">Entwicklung</h2>
+        <p class="chart-subtitle">Basis {{ baseLabel() }} = 100 %</p>
+
+        <table class="stat-table">
+          <caption>
+            Prozentwerte je Produkt bezogen auf {{ baseLabel() }}. „–" bedeutet, dass es im
+            Basiszeitraum keine Anlagen gab und sich deshalb kein Prozentwert bilden lässt.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Zeitraum</th>
+              @for (item of series; track item.key) {
+                <th scope="col" class="numeric">{{ item.label }}</th>
+              }
+              <th scope="col" class="numeric">Gesamt</th>
+              <th scope="col" class="numeric">ggü. Vorzeitraum</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of growthRows(); track row.label) {
+              <tr>
+                <th scope="row">
+                  {{ row.label }}
+                  @if (row.isBase) {
+                    <span class="row-hint">Basis</span>
+                  } @else if (row.hint) {
+                    <span class="row-hint">{{ row.hint }}</span>
+                  }
+                </th>
+                @for (cell of row.cells; track cell.product) {
+                  <td class="numeric">{{ cell.text }}</td>
+                }
+                <td class="numeric total">{{ row.totalText }}</td>
+                <td class="numeric">
+                  <span
+                    class="delta"
+                    [class.delta-up]="row.change.direction === 'up'"
+                    [class.delta-down]="row.change.direction === 'down'"
+                  >
+                    {{ row.change.text }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Licence amounts: typed in by hand, kept in this browser, visible to one user only -->
+  @if (canSeeManualFigures()) {
+  <mat-card class="manual-card">
+    <mat-card-content>
+      <div class="manual-header">
+        <div>
+          <h2 class="chart-title">Lizenzen in Euro</h2>
+          <p class="chart-subtitle">
+            Beträge je Zeitraum von Hand eintragen. Sie stehen bewusst nicht im Diagramm — Euro
+            und Anlagenzahlen haben keine gemeinsame Skala. Verglichen wird deshalb die
+            prozentuale Entwicklung beider Reihen. Die Eingaben bleiben nur in diesem Browser
+            und gehen nicht an den Server.
+          </p>
+        </div>
+        <div class="manual-actions">
+          <mat-button-toggle-group
+            [value]="amountUnit()"
+            (change)="setAmountUnit($event.value)"
+            aria-label="Bedeutung der eingetragenen Beträge"
+            hideSingleSelectionIndicator
+          >
+            <mat-button-toggle
+              value="month"
+              matTooltip="Eingetragen ist ein Monatsbeitrag — er wird für die Spalte € je Anlage mit 12 auf ein Jahr hochgerechnet"
+            >
+              Monatsbetrag
+            </mat-button-toggle>
+            <mat-button-toggle value="year" matTooltip="Eingetragen ist bereits der Jahresbetrag">
+              Jahresbetrag
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+
+          @if (hasManualData()) {
+            <button mat-stroked-button (click)="clearManualAmounts()">
+              <mat-icon>backspace</mat-icon>
+              Eingaben löschen
+            </button>
+          }
+        </div>
+      </div>
+
+      <p class="manual-hint">
+        Beide Spalten „in %" starten bei 100 %. Die letzte Spalte ist der Abstand dieser beiden
+        Prozentwerte in Prozentpunkten — sie bedeutet <strong>nicht</strong>, dass etwas sinkt:
+        −72 %-Pkt. heißt, der Betrag (127 %) ist langsamer gewachsen als die Anlagenzahl
+        (199 %). Wie viel je Anlage übrig bleibt, steht in „€ je Anlage".
+        @if (amountUnit() === 'month') {
+          Die Beträge gelten als <strong>Monatsbeiträge</strong> und werden für „€ je Anlage"
+          mit 12 auf ein Jahr hochgerechnet. Auf die Prozentwerte hat die Einheit keinen
+          Einfluss.
+        } @else {
+          Die Beträge gelten als <strong>Jahresbeträge</strong>. Auf die Prozentwerte hat die
+          Einheit keinen Einfluss.
+        }
+      </p>
+
+      <table class="stat-table manual-table">
+        <caption>
+          Beträge und Anlagen jeweils bezogen auf den ersten Zeitraum ({{ baseLabel() }} = 100 %).
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Zeitraum</th>
+            <th scope="col" class="numeric">{{ amountColumnLabel() }}</th>
+            <th scope="col" class="numeric">Betrag</th>
+            <th scope="col" class="numeric">Betrag in %</th>
+            <th scope="col" class="numeric">ggü. Vorzeitraum</th>
+            <th scope="col" class="numeric">Anlagen</th>
+            <th scope="col" class="numeric">Anlagen in %</th>
+            <th scope="col" class="numeric">€ je Anlage (Jahr)</th>
+            <th scope="col" class="numeric">Betrag ggü. Anlagen</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of manualRows(); track row.label) {
+            <tr>
+              <th scope="row">
+                {{ row.label }}
+                @if (row.isBase) {
+                  <span class="row-hint">Basis</span>
+                } @else if (row.hint) {
+                  <span class="row-hint">{{ row.hint }}</span>
+                }
+              </th>
+              <td class="numeric">
+                <input
+                  class="manual-input"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputmode="decimal"
+                  [value]="manualValue(row.label)"
+                  [attr.aria-label]="amountColumnLabel() + ' für ' + row.label"
+                  (change)="onManualInput(row.label, $event)"
+                />
+              </td>
+              <td class="numeric">{{ row.amountText }}</td>
+              <td class="numeric total">{{ row.amountIndexText }}</td>
+              <td class="numeric">
+                <span
+                  class="delta"
+                  [class.delta-up]="row.amountChange.direction === 'up'"
+                  [class.delta-down]="row.amountChange.direction === 'down'"
+                >
+                  {{ row.amountChange.text }}
+                </span>
+              </td>
+              <td class="numeric">{{ row.recorded }}</td>
+              <td class="numeric">{{ row.recordedIndexText }}</td>
+              <td class="numeric">{{ row.perUnitText }}</td>
+              <!-- Neutral on purpose: a negative gap is not a decline, both series may be rising -->
+              <td class="numeric">
+                <span class="delta" [matTooltip]="row.gapExplanation">{{ row.gapText }}</span>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="9" class="empty-row">Kein Zeitraum gewählt.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </mat-card-content>
+  </mat-card>
+  }
+</div>

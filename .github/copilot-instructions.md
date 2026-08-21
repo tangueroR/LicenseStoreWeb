@@ -27,14 +27,16 @@ src/
 ├── app/
 │   ├── components/
 │   │   ├── login/                  # JWT login form
-│   │   ├── license-dashboard/      # Toolbar + 4 product tabs
+│   │   ├── license-dashboard/      # Toolbar + 4 product tabs + Statistik tab
 │   │   ├── license-table/          # Table, filter, detail panel (per product)
+│   │   ├── statistics/             # Statistik tab: range presets, bar chart, data table
 │   │   ├── create-license-dialog/  # Password generation dialog
 │   │   └── confirm-dialog/         # Generic yes/no dialog
 │   ├── services/                   # auth.service.ts, license.service.ts
 │   ├── guards/auth.guard.ts        # Functional CanActivateFn
 │   ├── interceptors/auth.interceptor.ts
-│   └── models/sico-anlage.model.ts # ALL interfaces live here
+│   ├── shared/german-date.ts       # dd.MM.yyyy parsing/formatting, month arithmetic
+│   └── models/                     # sico-anlage.model.ts, product-info.model.ts
 └── environments/
     ├── environment.ts              # dev
     └── environment.prod.ts         # prod (keep in sync — see note below)
@@ -79,6 +81,19 @@ Additional encodings:
 
 Products: `'sico1010' | 'sico2020' | 'sico5000' | 'sico6000'` (`ProductType`).
 Network products = `sico2020` and `sico6000`.
+
+### Product lifecycle
+
+Relevant whenever counts are compared over time — a missing year is often "not sold",
+not "no data". Encoded in `PRODUCT_INFOS` (`src/app/models/product-info.model.ts`); update
+that constant rather than hard-coding years in a component.
+
+| Product | Lifecycle |
+|---------|-----------|
+| Sico6000 | Successor of the Sico5000, sold since 2022 |
+| Sico2020 | Successor of the Sico1010, on sale |
+| Sico1010 | Superseded by the Sico2020 but **still sold** |
+| Sico5000 | Not sold since 2022, replaced by the Sico6000 |
 
 ## Backend API
 
@@ -158,3 +173,12 @@ template, exactly as the toolbar buttons in `license-table.component.html` do.
 
 More detailed rules live in `.github/instructions/*.instructions.md` and apply automatically
 to the file globs declared in their front matter.
+
+| File | Applies to |
+|------|------------|
+| `angular-components.instructions.md` | `src/app/components/**` |
+| `charts.instructions.md` | `src/app/components/statistics/**` |
+| `services.instructions.md` | services, guards, interceptors |
+| `models.instructions.md` | `src/app/models/**` |
+| `styles.instructions.md` | `**/*.scss` |
+| `build-and-release.instructions.md` | environments, build, deployment |

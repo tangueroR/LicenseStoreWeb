@@ -1,0 +1,279 @@
+// Categorical chart palette. Validated for the light chart surface (the app pins
+// `color-scheme: light` in styles.scss): lightness band, chroma floor, adjacent
+// CVD separation and normal-vision separation all pass. The two low-contrast
+// slots (aqua, yellow) are relieved by the legend and the data table.
+:host {
+  display: block;
+  --viz-series-1: #2a78d6; // Sico6000
+  --viz-series-2: #eb6834; // Sico2020
+  --viz-series-3: #1baf7a; // Sico1010
+  --viz-series-4: #eda100; // Sico5000
+  // Chrome: hairlines are decorative, muted *text* borrows the Material token so
+  // it keeps the WCAG AA contrast ratio the theme guarantees.
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-muted: var(--mat-sys-on-surface-variant);
+}
+
+.statistics-container {
+  padding: 16px 0;
+}
+
+.statistics-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.date-field {
+  min-width: 130px;
+  max-width: 160px;
+  flex: 0 0 auto;
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.range-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+  border-left: 3px solid var(--mat-sys-primary);
+  border-radius: 8px;
+  font-size: 14px;
+
+  mat-icon {
+    color: var(--mat-sys-primary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.range-warning {
+  margin-left: auto;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.load-error {
+  margin-bottom: 16px;
+}
+
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  flex: 1 1 180px;
+
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+  }
+}
+
+.summary-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.summary-value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.hero-value {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--mat-sys-primary);
+}
+
+// Direction is carried by the sign first, the color only supplements it
+.delta {
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.delta-up {
+  color: #006300;
+}
+
+.delta-down {
+  color: #b3261e;
+}
+
+.summary-note {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--viz-muted);
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.chart-card mat-card-content,
+.growth-card mat-card-content,
+.manual-card mat-card-content {
+  padding: 16px;
+}
+
+.growth-card,
+.manual-card {
+  margin-top: 16px;
+
+  .stat-table {
+    margin-top: 8px;
+  }
+}
+
+.manual-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.manual-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.manual-hint {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--viz-axis);
+  background: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.manual-input {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: 4px;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: inherit;
+  text-align: right;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 1px;
+  }
+}
+
+.chart-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chart-subtitle {
+  margin: 2px 0 12px;
+  font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.stat-table {
+  width: 100%;
+  margin-top: 24px;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+
+  caption {
+    caption-side: top;
+    text-align: left;
+    padding-bottom: 8px;
+    font-size: 12px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  th,
+  td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--viz-grid);
+    text-align: left;
+  }
+
+  thead th {
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  tbody th {
+    font-weight: 500;
+  }
+
+  .numeric {
+    text-align: right;
+  }
+
+  .total {
+    font-weight: 600;
+  }
+
+  .empty-row {
+    text-align: center;
+    padding: 24px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.row-hint {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--viz-muted);
+}
+
+@media (max-width: 700px) {
+  .hero-value {
+    font-size: 36px;
+  }
+}
