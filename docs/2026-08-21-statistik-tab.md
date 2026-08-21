@@ -160,26 +160,28 @@ Wert = 100 %) und nur die Prozentwerte verglichen:
 | ggü. Vorzeitraum | Veränderung des Betrags gegenüber dem vorherigen Zeitraum |
 | Anlagen | Anzahl aus der Datenbank |
 | Anlagen in % | Anzahl bezogen auf den Basiszeitraum |
-| € je Anlage | Betrag geteilt durch die Anzahl — die Zahl hinter dem Prozentabstand |
+| Ø Preis je Anlage | Betrag geteilt durch die Anlagen des Zeitraums — der Durchschnittspreis je verkaufter Anlage |
 | Betrag ggü. Anlagen | Abstand beider Prozentwerte in **Prozentpunkten** |
 
 Euro und Stückzahl werden nie voneinander abgezogen, nur ihre Entwicklungen.
 
 ### Warum die letzte Spalte negativ sein kann, obwohl alles steigt
 
-Der häufigste Lesefehler, mit echten Zahlen:
+Der häufigste Lesefehler, mit echten Zahlen (Beträge als Monatsbeiträge eingetragen):
 
-| Zeitraum | Betrag | Betrag in % | Anlagen | Anlagen in % | € je Anlage | Betrag ggü. Anlagen |
-|----------|-------:|------------:|--------:|-------------:|------------:|--------------------:|
-| 08.2021 (Basis) | 4.800,00 € | 100 % | 78 | 100 % | 61,54 € | ±0 %-Pkt. |
-| 08.2022–08.2023 | 5.190,00 € | 108 % | 101 | 129 % | 51,39 € | −21 %-Pkt. |
-| 08.2023–08.2024 | 5.500,00 € | 115 % | 109 | 140 % | 50,46 € | −25 %-Pkt. |
-| 08.2024–08.2025 | 5.800,00 € | 121 % | 134 | 172 % | 43,28 € | −51 %-Pkt. |
-| 08.2025–08.2026 | 6.100,00 € | 127 % | 155 | 199 % | 39,35 € | −72 %-Pkt. |
+| Zeitraum | Betrag | Betrag in % | Anlagen | Anlagen in % | Ø Preis je Anlage | Betrag ggü. Anlagen |
+|----------|-------:|------------:|--------:|-------------:|------------------:|--------------------:|
+| 08.2021 (Basis) | 4.800,00 € | 100 % | 78 | 100 % | 738,46 € | ±0 %-Pkt. |
+| 08.2022–08.2023 | 5.190,00 € | 108 % | 101 | 129 % | 616,63 € | −21 %-Pkt. |
+| 08.2023–08.2024 | 5.500,00 € | 115 % | 109 | 140 % | 605,50 € | −25 %-Pkt. |
+| 08.2024–08.2025 | 5.800,00 € | 121 % | 134 | 172 % | 519,40 € | −51 %-Pkt. |
+| 08.2025–08.2026 | 6.100,00 € | 127 % | 155 | 199 % | 472,26 € | −72 %-Pkt. |
 
 Beide Reihen **steigen** — der Betrag um 27 %, die Anlagen um 99 %. Die letzte Spalte ist
 `127 − 199 = −72` Prozentpunkte und sagt nur: die Anlagenzahl wächst schneller als der Betrag.
-Pro Anlage bleibt entsprechend weniger übrig (61,54 € → 39,35 €).
+Der Durchschnittspreis je verkaufter Anlage sinkt entsprechend von 738,46 € auf 472,26 €
+(−36 %) — das ist die eigentliche Aussage, und sie steht als Betrag in der Tabelle statt nur
+als Prozentpunkt-Abstand.
 
 Damit das nicht als Rückgang gelesen wird:
 
@@ -188,7 +190,7 @@ Damit das nicht als Rückgang gelesen wird:
   eine Richtung wirklich gut oder schlecht ist.
 - Der Tooltip schreibt es aus: „Gegenüber 08.2021: Betrag +27 %, Anlagen +99 %. Der Betrag
   entwickelt sich schwächer als die Anlagenzahl — beide können trotzdem steigen."
-- **„€ je Anlage"** liefert die Zahl dahinter im Klartext.
+- **„Ø Preis je Anlage"** liefert die Zahl dahinter im Klartext.
 
 ### Monats- oder Jahresbetrag
 
@@ -197,11 +199,11 @@ Ein Umschalter über der Tabelle legt fest, was ein eingetragener Betrag bedeute
 
 **Auf keinen einzigen Prozentwert hat das Einfluss** — ein Index ist skaleninvariant: alle
 Zeilen mit 12 zu multiplizieren lässt 100 / 108 / 115 / 121 / 127 % unverändert. Betroffen ist
-allein **„€ je Anlage (Jahr)"**, denn dort wird ein Betrag durch die Anlagen eines
+allein **„Ø Preis je Anlage"**, denn dort wird ein Betrag durch die Anlagen eines
 Zwölf-Monats-Zeitraums geteilt. Steht der Schalter auf „Monatsbetrag", wird vorher mit 12
 hochgerechnet:
 
-| Zeitraum | Monatsbetrag | Jahresbetrag | Anlagen | € je Anlage (Jahr) |
+| Zeitraum | Monatsbetrag | Jahresbetrag | Anlagen | Ø Preis je Anlage |
 |----------|-------------:|-------------:|--------:|-------------------:|
 | 08.2021 | 4.800 € | 57.600 € | 78 | 738,46 € |
 | 08.2025–08.2026 | 6.100 € | 73.200 € | 155 | 472,26 € |

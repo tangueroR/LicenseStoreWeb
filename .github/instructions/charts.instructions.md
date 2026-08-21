@@ -66,8 +66,9 @@ separate charts.
 - A percentage-point gap gets **no red/green** and no up/down direction: both series can be
   rising and the gap still be negative — it only says which one grew faster. Reserve the
   delta colors for numbers where a direction really is good or bad, and spell the gap out in
-  words in a tooltip (`explainPoints`). Where a plain ratio explains it better (€ per
-  installation), show that column too.
+  words in a tooltip (`explainPoints`). Where a plain business figure explains it better —
+  the average price per installation — show that column too and name it for what it is
+  ("Ø Preis je Anlage"), not as a generic ratio.
 
 ## Manually entered licence amounts
 

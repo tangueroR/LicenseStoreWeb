@@ -655,7 +655,7 @@ export class LicenseStatisticsComponent implements OnInit {
         recorded: entry.total,
         recordedIndexText: formatIndex(entry.total, baseRecorded),
         // The plain business number behind the percentage gap, always on a yearly basis
-        perUnitText:
+        averagePriceText:
           amount !== undefined && entry.total > 0
             ? formatEuro((amount * monthsPerPeriod) / entry.total)
             : '–',

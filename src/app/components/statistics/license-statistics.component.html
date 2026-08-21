@@ -263,7 +263,7 @@
           >
             <mat-button-toggle
               value="month"
-              matTooltip="Eingetragen ist ein Monatsbeitrag — er wird für die Spalte € je Anlage mit 12 auf ein Jahr hochgerechnet"
+              matTooltip="Eingetragen ist ein Monatsbeitrag — er wird für den Ø Preis je Anlage mit 12 auf ein Jahr hochgerechnet"
             >
               Monatsbetrag
             </mat-button-toggle>
@@ -285,9 +285,9 @@
         Beide Spalten „in %" starten bei 100 %. Die letzte Spalte ist der Abstand dieser beiden
         Prozentwerte in Prozentpunkten — sie bedeutet <strong>nicht</strong>, dass etwas sinkt:
         −72 %-Pkt. heißt, der Betrag (127 %) ist langsamer gewachsen als die Anlagenzahl
-        (199 %). Wie viel je Anlage übrig bleibt, steht in „€ je Anlage".
+        (199 %). Was je verkaufter Anlage hereinkommt, steht in „Ø Preis je Anlage".
         @if (amountUnit() === 'month') {
-          Die Beträge gelten als <strong>Monatsbeiträge</strong> und werden für „€ je Anlage"
+          Die Beträge gelten als <strong>Monatsbeiträge</strong> und werden für den Ø Preis
           mit 12 auf ein Jahr hochgerechnet. Auf die Prozentwerte hat die Einheit keinen
           Einfluss.
         } @else {
@@ -309,7 +309,7 @@
             <th scope="col" class="numeric">ggü. Vorzeitraum</th>
             <th scope="col" class="numeric">Anlagen</th>
             <th scope="col" class="numeric">Anlagen in %</th>
-            <th scope="col" class="numeric">€ je Anlage (Jahr)</th>
+            <th scope="col" class="numeric">Ø Preis je Anlage</th>
             <th scope="col" class="numeric">Betrag ggü. Anlagen</th>
           </tr>
         </thead>
@@ -349,7 +349,7 @@
               </td>
               <td class="numeric">{{ row.recorded }}</td>
               <td class="numeric">{{ row.recordedIndexText }}</td>
-              <td class="numeric">{{ row.perUnitText }}</td>
+              <td class="numeric">{{ row.averagePriceText }}</td>
               <!-- Neutral on purpose: a negative gap is not a decline, both series may be rising -->
               <td class="numeric">
                 <span class="delta" [matTooltip]="row.gapExplanation">{{ row.gapText }}</span>
