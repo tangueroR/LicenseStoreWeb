@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../services/auth.service';
 import { LicenseTableComponent } from '../license-table/license-table.component';
 import { ProductType } from '../../models/sico-anlage.model';
+import { environment } from '../../../environments/environment';
 
 interface ProductTab {
   label: string;
@@ -30,6 +31,9 @@ interface ProductTab {
   styleUrl: './license-dashboard.component.scss'
 })
 export class LicenseDashboardComponent {
+  /** 4-part application version (major.minor.patch.build) shown next to the app title */
+  readonly appVersion = environment.version;
+
   readonly tabs: ProductTab[] = [
     { label: 'Sico6000', product: 'sico6000' },
     { label: 'Sico2020', product: 'sico2020' },

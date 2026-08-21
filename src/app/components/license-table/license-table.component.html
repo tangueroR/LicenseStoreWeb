@@ -24,6 +24,26 @@
       <input matInput [(ngModel)]="dateTo" (change)="applyDateRange()" placeholder="dd.MM.yyyy" />
     </mat-form-field>
 
+    <!-- Fills the Von/Bis fields with a ready-made range and applies it -->
+    <button mat-stroked-button [matMenuTriggerFor]="rangeMenu" class="range-button"
+            matTooltip="Zeitraum in Von/Bis eintragen und anzeigen">
+      <mat-icon>date_range</mat-icon>
+      Zeitraum
+    </button>
+    <mat-menu #rangeMenu="matMenu">
+      <button mat-menu-item (click)="applyLastMonths(12)">Letzte 12 Monate</button>
+      <button mat-menu-item (click)="applyLastYears(2)">Letzte 2 Jahre</button>
+      <button mat-menu-item (click)="applyLastYears(3)">Letzte 3 Jahre</button>
+      <button mat-menu-item (click)="applyLastYears(4)">Letzte 4 Jahre</button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="applyYearToDate()">Seit Jahresbeginn</button>
+      @for (year of recentYears; track year) {
+        <button mat-menu-item (click)="applyCalendarYear(year)">Jahr {{ year }}</button>
+      }
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="clearFilter()">Zeitraum zurücksetzen</button>
+    </mat-menu>
+
     <span class="toolbar-spacer"></span>
 
     <span class="license-count">{{ dataSource.data.length }} Lizenzen</span>
