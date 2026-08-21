@@ -95,6 +95,11 @@ that constant rather than hard-coding years in a component.
 | Sico1010 | Superseded by the Sico2020 but **still sold** |
 | Sico5000 | Not sold since 2022, replaced by the Sico6000 |
 
+A **Sico1010 description** carries a `xxxx-yyyy` word (four characters, hyphen, four
+characters) when the installation was genuinely sold. A four-character label marks an update
+of an existing installation. The statistics tab can filter on this
+(`SOLD_SICO1010_PATTERN`); keep that constant the only place that knows the format.
+
 ## Backend API
 
 Base URL comes from `environment.apiBaseUrl` (default `https://sicotronictest.de:9443`).

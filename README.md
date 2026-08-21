@@ -21,6 +21,7 @@ LicenseStoreWeb provides a browser-based interface for generating, viewing, and 
 - **Smart Filter** — Supports text search, single date (`dd.MM.yyyy`), date range (`01.01.2005 - 30.06.2025`), year (`2026`), and year range (`2020 - 2025`)
 - **Range Presets** — "Zeitraum" button fills the Von/Bis fields with a ready-made range (last 12 months, last 2/3/4 years, year to date, one of the last four calendar years) and applies it; the filled dates stay editable
 - **Statistics** — Licenses per period and product as a grouped bar chart plus a data table; range presets (last 12 months, last 2/3/5 years, year to date, last 5 calendar years, everything since 2012, single years), grouped by calendar year or by rolling 12-month windows. Built from plain HTML/CSS — no charting library
+- **Scope switches** — Two checkboxes take Sico1010 out of the whole calculation, or count only genuinely sold ones (description carries a `xxxx-yyyy` word; a four-character label marks an update, not a sale)
 - **Growth in percent** — The first period of the range is the base (100 %); every later period is shown relative to it, plus the change against the preceding period
 - **Licence amounts (€)** — Manual input per period (monthly or yearly, switchable), stored in the browser only and visible to a single user. Kept out of the bar chart on purpose: euros and installation counts share no scale, so both series are indexed to their base period and compared in percentage points
 - **Version Display** — 4-part version (`environment.version`) shown next to the app title in the toolbar

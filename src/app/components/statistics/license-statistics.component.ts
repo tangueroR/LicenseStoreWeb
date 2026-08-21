@@ -3,6 +3,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -51,6 +52,30 @@ const DEFAULT_YEAR_SPAN = 5;
 
 /** Hard stop for rolling windows, so a long range cannot produce hundreds of bars */
 const MAX_ROLLING_BANDS = 20;
+
+/**
+ * A Sico1010 counts as genuinely sold when its description carries a four-character block,
+ * a hyphen and another four-character block (e.g. `ABCD-1234`). A description of only four
+ * characters marks an update of an existing installation, not a sale, and is left out.
+ *
+ * Adjust this one constant if the real descriptions follow a narrower rule (digits only,
+ * fixed prefix, …) — nothing else in the component knows the format.
+ */
+const SOLD_SICO1010_PATTERN = /^[^\s-]{4}-[^\s-]{4}$/;
+
+/**
+ * Whether a Sico1010 row looks like a sale rather than an update. The pattern is matched
+ * against whole words, not anywhere in the text, so a description like "Update-2024" does
+ * not slip through just because "date-2024" happens to fit the shape.
+ */
+function isSoldSico1010(row: SicoAnlage): boolean {
+  const description = row.description ?? '';
+  return description.split(/\s+/).some((word) => SOLD_SICO1010_PATTERN.test(word));
+}
+
+/** localStorage keys for the two Sico1010 switches */
+const INCLUDE_SICO1010_KEY = 'stats_include_sico1010';
+const SOLD_SICO1010_ONLY_KEY = 'stats_sico1010_sold_only';
 
 /** localStorage key for the manually entered licence amounts */
 const MANUAL_STORAGE_KEY = 'stats_manual_counts';
@@ -179,6 +204,23 @@ function storeManualAmounts(counts: Record<string, number>): void {
   }
 }
 
+function readStoredFlag(key: string, fallback: boolean): boolean {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : raw === 'true';
+  } catch {
+    return fallback;
+  }
+}
+
+function storeFlag(key: string, value: boolean): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // See storeManualAmounts
+  }
+}
+
 function readStoredAmountUnit(): AmountUnit {
   try {
     return localStorage.getItem(MANUAL_UNIT_KEY) === 'year' ? 'year' : 'month';
@@ -202,6 +244,7 @@ function storeAmountUnit(unit: AmountUnit): void {
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
+    MatCheckboxModule,
     MatDividerModule,
     MatFormFieldModule,
     MatIconModule,
@@ -241,12 +284,40 @@ export class LicenseStatisticsComponent implements OnInit {
 
   readonly grouping = signal<Grouping>('calendar');
 
-  /** Fixed categorical order — a product keeps its color regardless of the range */
-  readonly series: BarChartSeries[] = PRODUCT_INFOS.map((info) => ({
-    key: info.product,
-    label: info.label,
-    color: `var(--viz-series-${info.colorSlot})`
-  }));
+  /** Whether Sico1010 takes part in the calculation at all */
+  readonly includeSico1010 = signal(readStoredFlag(INCLUDE_SICO1010_KEY, true));
+
+  /** Whether only genuinely sold Sico1010 count, i.e. description `xxxx-yyyy` */
+  readonly soldSico1010Only = signal(readStoredFlag(SOLD_SICO1010_ONLY_KEY, false));
+
+  setIncludeSico1010(value: boolean): void {
+    this.includeSico1010.set(value);
+    storeFlag(INCLUDE_SICO1010_KEY, value);
+  }
+
+  setSoldSico1010Only(value: boolean): void {
+    this.soldSico1010Only.set(value);
+    storeFlag(SOLD_SICO1010_ONLY_KEY, value);
+  }
+
+  /** The products every number on this tab is built from */
+  readonly activeProducts = computed(() =>
+    this.includeSico1010()
+      ? PRODUCT_INFOS
+      : PRODUCT_INFOS.filter((info) => info.product !== 'sico1010')
+  );
+
+  /**
+   * Fixed categorical order — a product keeps its color regardless of the range or of which
+   * products are switched on, so nothing is repainted when Sico1010 drops out.
+   */
+  readonly series = computed<BarChartSeries[]>(() =>
+    this.activeProducts().map((info) => ({
+      key: info.product,
+      label: info.label,
+      color: `var(--viz-series-${info.colorSlot})`
+    }))
+  );
 
   /** The last calendar years, newest first — single-year presets */
   readonly recentYears = Array.from(
@@ -288,9 +359,18 @@ export class LicenseStatisticsComponent implements OnInit {
     });
   }
 
+  /** Rows that go into the calculation once the Sico1010 description filter is applied */
+  private readonly consideredRows = computed<Record<ProductType, SicoAnlage[]>>(() => {
+    const rows = this.rowsByProduct();
+    return {
+      ...rows,
+      sico1010: this.soldSico1010Only() ? rows.sico1010.filter(isSoldSico1010) : rows.sico1010
+    };
+  });
+
   /** Release dates per product as sorted timestamps — rows without a date drop out */
   private readonly timesByProduct = computed<Record<ProductType, number[]>>(() => {
-    const rows = this.rowsByProduct();
+    const rows = this.consideredRows();
     const result = {} as Record<ProductType, number[]>;
     for (const info of PRODUCT_INFOS) {
       result[info.product] = rows[info.product]
@@ -301,14 +381,24 @@ export class LicenseStatisticsComponent implements OnInit {
     return result;
   });
 
-  /** Rows the backend returned without a usable release date — they cannot be counted */
+  /**
+   * Rows the backend returned without a usable release date — they cannot be counted.
+   * Measured against the considered rows, so the description filter is not mistaken for
+   * a missing date, and only for the products that are switched on.
+   */
   readonly undatedCount = computed(() => {
-    const rows = this.rowsByProduct();
+    const rows = this.consideredRows();
     const times = this.timesByProduct();
-    return PRODUCT_INFOS.reduce(
+    return this.activeProducts().reduce(
       (sum, info) => sum + (rows[info.product].length - times[info.product].length),
       0
     );
+  });
+
+  /** How many Sico1010 look sold — shown next to the checkbox so the rule can be checked */
+  readonly sico1010Counts = computed(() => {
+    const all = this.rowsByProduct().sico1010;
+    return { total: all.length, sold: all.filter(isSoldSico1010).length };
   });
 
   // --- range --------------------------------------------------------------
@@ -450,7 +540,7 @@ export class LicenseStatisticsComponent implements OnInit {
   /** Counts per band and product — computed once, reused by chart, tables and percentages */
   private readonly bandCounts = computed(() =>
     this.bands().map((band) => {
-      const counts = PRODUCT_INFOS.map((info) =>
+      const counts = this.activeProducts().map((info) =>
         this.countBetween(info.product, band.start, band.end)
       );
       return { band, counts, total: counts.reduce((sum, count) => sum + count, 0) };
@@ -466,7 +556,9 @@ export class LicenseStatisticsComponent implements OnInit {
     this.bandCounts().map(({ band, counts }) => ({
       label: band.label,
       hint: band.hint,
-      values: Object.fromEntries(PRODUCT_INFOS.map((info, index) => [info.product, counts[index]]))
+      values: Object.fromEntries(
+        this.activeProducts().map((info, index) => [info.product, counts[index]])
+      )
     }))
   );
 
@@ -475,7 +567,7 @@ export class LicenseStatisticsComponent implements OnInit {
     this.bandCounts().map(({ band, counts, total }) => ({
       label: band.label,
       hint: band.hint,
-      cells: PRODUCT_INFOS.map((info, index) => ({
+      cells: this.activeProducts().map((info, index) => ({
         product: info.product,
         // "–" only when the product genuinely was not on sale and no data contradicts it
         text: counts[index] === 0 && !this.wasOnSale(info, band.year) ? '–' : String(counts[index])
@@ -520,7 +612,7 @@ export class LicenseStatisticsComponent implements OnInit {
       label: entry.band.label,
       hint: entry.band.hint,
       isBase: index === 0,
-      cells: PRODUCT_INFOS.map((info, productIndex) => ({
+      cells: this.activeProducts().map((info, productIndex) => ({
         product: info.product,
         text: formatIndex(entry.counts[productIndex], base.counts[productIndex])
       })),
@@ -537,7 +629,7 @@ export class LicenseStatisticsComponent implements OnInit {
     const start = startOfDay(this.rangeFrom());
     const end = endOfDay(this.rangeTo());
 
-    return PRODUCT_INFOS.map((info, index) => ({
+    return this.activeProducts().map((info, index) => ({
       label: info.label,
       note: info.note,
       color: `var(--viz-series-${info.colorSlot})`,

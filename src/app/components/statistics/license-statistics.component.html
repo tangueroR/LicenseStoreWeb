@@ -74,6 +74,33 @@
     </button>
   </div>
 
+  <!-- Both switches change every number on this tab, not just the chart -->
+  <div class="scope-row">
+    <mat-checkbox
+      [checked]="includeSico1010()"
+      (change)="setIncludeSico1010($event.checked)"
+      matTooltip="Abgewählt fällt die Sico1010 aus Diagramm, Tabellen, Summen und allen Prozentwerten heraus"
+    >
+      Sico1010 einbeziehen
+    </mat-checkbox>
+
+    <mat-checkbox
+      [checked]="soldSico1010Only()"
+      [disabled]="!includeSico1010()"
+      (change)="setSoldSico1010Only($event.checked)"
+      matTooltip="Zählt nur Sico1010 mit einer Beschreibung im Format xxxx-yyyy — reine Updates mit vierstelliger Bezeichnung bleiben draußen"
+    >
+      Nur verkaufte Sico1010 (Beschreibung xxxx-yyyy)
+    </mat-checkbox>
+
+    @if (includeSico1010()) {
+      <span class="scope-hint">
+        {{ sico1010Counts().sold }} von {{ sico1010Counts().total }} Sico1010 haben eine
+        Beschreibung im Format xxxx-yyyy
+      </span>
+    }
+  </div>
+
   <div class="range-info">
     <mat-icon>info</mat-icon>
     <span>Zeitraum: {{ rangeLabel() }}</span>
@@ -131,7 +158,7 @@
       <p class="chart-subtitle">{{ rangeLabel() }}</p>
 
       <ul class="legend">
-        @for (item of series; track item.key) {
+        @for (item of series(); track item.key) {
           <li>
             <span class="swatch" [style.background]="item.color" aria-hidden="true"></span>
             {{ item.label }}
@@ -140,7 +167,7 @@
       </ul>
 
       <app-grouped-bar-chart
-        [series]="series"
+        [series]="series()"
         [groups]="chartGroups()"
         caption="Anlagen pro Zeitraum je Produkt"
       ></app-grouped-bar-chart>
@@ -153,7 +180,7 @@
         <thead>
           <tr>
             <th scope="col">Zeitraum</th>
-            @for (item of series; track item.key) {
+            @for (item of series(); track item.key) {
               <th scope="col" class="numeric">{{ item.label }}</th>
             }
             <th scope="col" class="numeric">Summe</th>
@@ -176,7 +203,7 @@
           }
           @empty {
             <tr>
-              <td [attr.colspan]="series.length + 2" class="empty-row">
+              <td [attr.colspan]="series().length + 2" class="empty-row">
                 Keine Daten im gewählten Zeitraum.
               </td>
             </tr>
@@ -201,7 +228,7 @@
           <thead>
             <tr>
               <th scope="col">Zeitraum</th>
-              @for (item of series; track item.key) {
+              @for (item of series(); track item.key) {
                 <th scope="col" class="numeric">{{ item.label }}</th>
               }
               <th scope="col" class="numeric">Gesamt</th>
