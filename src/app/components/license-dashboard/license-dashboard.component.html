@@ -1,5 +1,6 @@
 <mat-toolbar color="primary" class="app-toolbar">
-  <span>SicoLicenseStore</span>
+  <span class="app-title">SicoLicenseStore</span>
+  <span class="app-version" [attr.aria-label]="'Anwendungsversion ' + appVersion">v{{ appVersion }}</span>
   <span class="spacer"></span>
   <span class="user-info">{{ authService.userName() }}</span>
   <button mat-icon-button [matMenuTriggerFor]="userMenu">

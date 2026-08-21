@@ -13,12 +13,17 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { DatePipe } from '@angular/common';
 import { SicoAnlage, ProductType, LicenseRequest, LicenseResponse, DeleteRequest } from '../../models/sico-anlage.model';
 import { LicenseService } from '../../services/license.service';
 import { AuthService } from '../../services/auth.service';
 import { CreateLicenseDialogComponent, CreateLicenseDialogData } from '../create-license-dialog/create-license-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog/confirm-dialog.component';
+
+/** Number of calendar years offered as single-year presets in the range menu */
+const RECENT_YEAR_COUNT = 4;
 
 @Component({
   selector: 'app-license-table',
@@ -38,6 +43,8 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../confirm-dialog/con
     MatSnackBarModule,
     MatCardModule,
     MatChipsModule,
+    MatMenuModule,
+    MatDividerModule,
     DatePipe
   ],
   templateUrl: './license-table.component.html',
@@ -56,6 +63,12 @@ export class LicenseTableComponent implements OnInit {
   /** Date range filter fields */
   dateFrom = '';
   dateTo = '';
+
+  /** The last calendar years, newest first — single-year presets in the range menu */
+  readonly recentYears = Array.from(
+    { length: RECENT_YEAR_COUNT },
+    (_, index) => new Date().getFullYear() - index
+  );
 
   /** Active filter info for display */
   activeFilterInfo = signal<string>('');
@@ -229,10 +242,7 @@ export class LicenseTableComponent implements OnInit {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    const day = d.getDate().toString().padStart(2, '0');
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}.${month}.${year}`;
+    return this.toGermanDate(d);
   }
 
   loadData(): void {
@@ -319,6 +329,56 @@ export class LicenseTableComponent implements OnInit {
       this.filterValue = this.dateTo;
     }
     this.applyFilter();
+  }
+
+  /**
+   * Fill "Von"/"Bis" with a range that ends today and starts the given number of
+   * months earlier, then apply it (e.g. 12 months → 01.08.2025 - 01.08.2026).
+   */
+  applyLastMonths(months: number): void {
+    const today = new Date();
+    this.setDateRange(this.monthsBefore(today, months), today);
+  }
+
+  /** Fill "Von"/"Bis" with a range that ends today and spans the given number of years */
+  applyLastYears(years: number): void {
+    this.applyLastMonths(years * 12);
+  }
+
+  /** Fill "Von"/"Bis" with a full calendar year (01.01. - 31.12.) and apply it */
+  applyCalendarYear(year: number): void {
+    this.setDateRange(new Date(year, 0, 1), new Date(year, 11, 31));
+  }
+
+  /** Fill "Von"/"Bis" with the range from 01.01. of the current year until today */
+  applyYearToDate(): void {
+    const today = new Date();
+    this.setDateRange(new Date(today.getFullYear(), 0, 1), today);
+  }
+
+  /** Write a range into the "Von"/"Bis" inputs and apply it as filter */
+  private setDateRange(from: Date, to: Date): void {
+    this.dateFrom = this.toGermanDate(from);
+    this.dateTo = this.toGermanDate(to);
+    this.applyDateRange();
+  }
+
+  /**
+   * Same day of month, `months` months earlier. Clamped to the last day of the
+   * target month so 31.03. minus one month becomes 28./29.02. instead of 02./03.03.
+   */
+  private monthsBefore(date: Date, months: number): Date {
+    const target = new Date(date.getFullYear(), date.getMonth() - months, 1);
+    const lastDayOfTargetMonth = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(date.getDate(), lastDayOfTargetMonth));
+    return target;
+  }
+
+  /** Format a Date as dd.MM.yyyy */
+  private toGermanDate(date: Date): string {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    return `${day}.${month}.${date.getFullYear()}`;
   }
 
   onRowSelect(row: SicoAnlage): void {

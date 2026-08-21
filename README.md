@@ -19,6 +19,8 @@ LicenseStoreWeb provides a browser-based interface for generating, viewing, and 
 - **4-Tab Dashboard** — One tab per product (Sico6000, Sico2020, Sico1010, Sico5000)
 - **License Table** — Sortable/paginated Material table, default sorted by date (newest first)
 - **Smart Filter** — Supports text search, single date (`dd.MM.yyyy`), date range (`01.01.2005 - 30.06.2025`), year (`2026`), and year range (`2020 - 2025`)
+- **Range Presets** — "Zeitraum" button fills the Von/Bis fields with a ready-made range (last 12 months, last 2/3/4 years, year to date, one of the last four calendar years) and applies it; the filled dates stay editable
+- **Version Display** — 4-part version (`environment.version`) shown next to the app title in the toolbar
 - **Detail Panel** — Shows selected row details: Neuron ID, Version, Project Name, Description, IP/Wireguard (network products), Password, Premium Password, Modem Password
 - **Password Generation** — Create dialog with pre-fill from selected row; Wireguard/IP fields for Sico2020/6000
 - **License Deletion** — Delete with confirmation dialog
@@ -85,6 +87,25 @@ ng serve
 # Build for production
 ng build --configuration=production
 ```
+
+### Versioning
+
+The app version uses the 4-part scheme `major.minor.patch.build` (same as the WPF
+predecessor) and lives in `environment.version`. It is rendered next to the
+"SicoLicenseStore" title in the toolbar. `angular.json` defines no `fileReplacements`, so
+bump the value in **both** `environment.ts` and `environment.prod.ts` to keep them in sync.
+
+## Documentation
+
+`docs/` holds dated notes about what was changed and why — start there when a feature's
+background is unclear.
+
+## AI / Editor Instructions
+
+`.github/copilot-instructions.md` holds the project-wide rules; path-scoped rules live in
+`.github/instructions/*.instructions.md` (components, services, models, styles, build) and
+reusable prompts in `.github/prompts/`. Read them before changing data-handling code — the
+`SicoAnlage` fields carry different meanings per product.
 
 ## Deployment (Railway)
 
